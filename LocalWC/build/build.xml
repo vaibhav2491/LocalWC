@@ -1,0 +1,68 @@
+<project name="plm developer build" default="build" basedir="..">
+	
+	<target name="init" unless="${initialized}">
+        <property environment="env"/>
+        <property file="build/build.properties"/>
+    	<echo>VERBOSE: wt.home ${wt.home}</echo>
+    	<echo>VERBOSE: ant.home ${ant.home}</echo>
+    	<echo>VERBOSE: java_home ${java_home}</echo>    	
+    	<echo>VERBOSE: hostname ${env.COMPUTERNAME}</echo>
+		<echo>VERBOSE: findbugs.home ${findbugs.home}</echo> 
+		<echo>VERBOSE: checkstyle.home ${checkstyle.home}</echo>		
+    	<echo>VERBOSE: codereview.reports.dir ${codereview.reports.dir}</echo>
+    </target>
+	
+    <target name="build" depends="init" description="Compiles java classes, builds resource bundles, and copies non-compiled files to windchill/codebase">
+        <echo>VERBOSE: Build</echo>
+    	<antcall target="stopWindchill"/>
+    	<antcall target="runXconfmanager"/>
+    	<antcall target="makeJar"/>
+    	<antcall target="startWindchill"/>
+    </target>
+	
+	 <target name="stopWindchill" depends="init">
+        <echo>VERBOSE: stop Windchill</echo>
+    	<exec executable="${wt.home}//bin//windchill" osfamily="windows" inputstring="">
+            <arg value="stop"/>
+        </exec>
+    </target>
+	
+	<target name="startWindchill" depends="init">
+        <echo>VERBOSE: start Windchill</echo>
+        <mkdir dir="${wt.home}/logs.bak"/>        
+          <move todir="${wt.home}/logs.bak">
+		    <fileset dir="${wt.home}/logs/">
+		      <include name="**/*.log*"/>
+		      <exclude name="${wt.home}/logs/logsBackUp"/>
+		    </fileset>
+  		</move>
+    	<exec executable="${wt.home}//bin//windchill" osfamily="windows" inputstring="">
+            <arg value="start"/>
+        </exec>
+    </target>
+	
+	<target name="runXconfmanager" depends="init" description="Runs the windchill XConfManager to propogate properties">
+		<echo>VERBOSE: Running Xconfmanager utility</echo>
+
+	 	<touch file="${wt.home}/site.xconf"/>
+		<exec executable="${wt.home}/bin/xconfmanager.bat" osfamily="windows">
+			<arg value="-p"/>
+		</exec>
+		        
+        <exec executable="cmd.exe" osfamily="windows" failonerror="true">
+            <arg line="/c ${wt.home}/bin/xconfmanager.bat -p"/>
+        </exec>
+	</target>
+
+	<target name="makeJar" depends="init">
+        <echo>VERBOSE: Running makeJar target </echo>
+        
+    	<exec executable="${ant.home}//bin//ant.bat" osfamily="windows" failonerror="true">
+            <arg value="-f"/>
+            <arg value="${wt.home}//codebase//MakeJar.xml"/>
+            <arg value="custUpdate"/>
+    		<env key="java_home" path="${java_home}"/>
+        </exec>
+    </target>
+
+</project>
