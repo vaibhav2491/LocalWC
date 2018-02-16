@@ -10,7 +10,7 @@ import java.util.Properties;
 public class ToolConfigurationProperties {
 
 	/**
-	 * ! Constant declaration for fileSeperator
+	 * ! Constant declaration for fileSeperator test
 	 */
 	public static String fileSeperator = System.getProperty("file.separator");
 	
